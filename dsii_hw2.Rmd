@@ -68,5 +68,54 @@ The degree of freedom obtained by generalized cross-validation is 'r fit.ss$df'.
 
 # 3. Generalized Additive Model (GAM)
 
+```{r}
+ctrl1 = trainControl(method = "cv", number = 10)
+set.seed(1)
+gam.fit = train(predictors, response,
+                method = "gam",
+                tuneGrid = data.frame(method = "GCV.Cp", select = c(TRUE,FALSE)),
+                trControl = ctrl1)
+gam.fit$bestTune
+```
+
+```{r}
+gam.fit$finalModel
+```
+
+```{r}
+gam.m1 = gam(Outstate ~ s(perc.alumni) + s(Terminal) + s(Top10perc) + s(PhD) + 
+    s(Grad.Rate) + s(Books) + s(Top25perc) + s(S.F.Ratio) + s(Personal) + 
+    s(P.Undergrad) + s(Enroll) + s(Room.Board) + s(Accept) + 
+    s(F.Undergrad) + s(Apps) + s(Expend), data = college)
+
+plot(gam.m1)
+```
+
+# 4. Multivariate Adaptive Regression Spline (MARS)
+
+```{r}
+mars_grid <- expand.grid(degree = 1:2,
+                         nprune = 2:10)
+set.seed(1)
+mars.fit <- train(predictors, response, 
+                  method = "earth",
+                  tuneGrid = mars_grid,
+                  trControl = ctrl1)
+
+ggplot(mars.fit)
+mars.fit$bestTune
+coef(mars.fit$finalModel)
+```
+
+```{r}
+p1 = partial(mars.fit, pred.var = c("Room.Board"), grid.resolution = 10) %>% autoplot()
+p2 = partial(mars.fit, pred.var = c("F.Undergrad", "perc.alumni"), grid.resolution = 10) %>% plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE, screen = list(z = 20, x = -60))
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+
+
 
 
