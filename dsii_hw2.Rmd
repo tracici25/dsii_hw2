@@ -91,6 +91,8 @@ gam.m1 = gam(Outstate ~ s(perc.alumni) + s(Terminal) + s(Top10perc) + s(PhD) +
 plot(gam.m1)
 ```
 
+All the predictors are shown to be nonlinear and modeled with 's' function based on the mgcv-gam training. 'Enroll' appears to have a negative effect on the out of state tuition due to the decreasing trend. 'Accept', 'F.Undergrad' and 'Apps' appear to have a positive effect on the tuition as percentile increases.
+
 # 4. Multivariate Adaptive Regression Spline (MARS)
 
 ```{r}
@@ -111,6 +113,11 @@ coef(mars.fit$finalModel)
 p1 = partial(mars.fit, pred.var = c("Room.Board"), grid.resolution = 10) %>% autoplot()
 p2 = partial(mars.fit, pred.var = c("F.Undergrad", "perc.alumni"), grid.resolution = 10) %>% plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE, screen = list(z = 20, x = -60))
 grid.arrange(p1, p2, ncol = 2)
+```
+
+```{r}
+# Comparison: MARS vs. GAM
+bwplot(resamples(list(mars = mars.fit, gam = gam.fit)), metric = "RMSE")
 ```
 
 
