@@ -1,0 +1,72 @@
+---
+title: "Homework 2"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(caret)
+library(patchwork)
+library(splines)
+library(gam)
+library(mgcv)
+library(boot)
+library(ggplot2)
+library(pdp)
+library(earth)
+
+set.seed(1)
+```
+
+```{r}
+# Load data
+college = read_csv("College.csv") %>% 
+  filter(College != "Columbia University") %>% # columbia has no outstate
+  select(-College)
+```
+
+# 1. Exploratory Data Analysis
+
+```{r}
+predictors = model.matrix(Outstate ~ ., college)[,-1]
+response = college$Outstate
+
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col <- rgb(.2, .4, .2, .5) 
+theme1$plot.symbol$pch <- 16
+theme1$plot.line$col <- rgb(.8, .1, .1, 1) 
+theme1$plot.line$lwd <- 2
+theme1$strip.background$col <- rgb(.0, .2, .6, .2)
+trellis.par.set(theme1)
+featurePlot(predictors, response, plot = "scatter", 
+            labels = c("","Y"), type = c("p"), layout = c(4, 4))
+```
+
+# 2. Smoothing Spline
+
+```{r}
+fit.ss = smooth.spline(college$Terminal, college$Outstate)
+fit.ss$df
+```
+
+
+```{r}
+Terminallims = range(college$Terminal)
+Terminal.grid = seq(from = Terminallims[1],to = Terminallims[2])
+
+pred.ss = predict(fit.ss, x = Terminal.grid)
+pred.ss.df = data.frame(pred = pred.ss$y, Terminal = Terminal.grid)
+
+p = ggplot(data = college, aes(x = Terminal, y = Outstate)) + geom_point(color =rgb(.2, .4, .2, .5))
+
+p + 
+  geom_line(aes(x = Terminal, y = pred), data = pred.ss.df,
+            color = rgb(.8, .1, .1, 1))+ theme_bw()
+```
+
+The degree of freedom obtained by generalized cross-validation is 'r fit.ss$df'. Based on the smoothing spline model, the response 'Outstate' and the predictor 'Terminal' have a non-linear relationship, but an increasing trend.
+
+# 3. Generalized Additive Model (GAM)
+
+
+
